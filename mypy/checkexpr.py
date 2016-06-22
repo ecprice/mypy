@@ -1409,6 +1409,7 @@ class ExpressionChecker:
                                                  is_lvalue, True,
                                                  self.named_type, self.not_ready_callback,
                                                  self.msg, base)
+            assert False
         else:
             # Invalid super. This has been reported by the semantic analyzer.
             return AnyType()

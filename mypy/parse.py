@@ -415,6 +415,8 @@ class Parser:
         elif isinstance(expr, MemberExpr):
             if isinstance(expr.expr, NameExpr):
                 return expr.expr.name == 'typing' and expr.name == 'no_type_check'
+            else:
+                return False
         else:
             return False
 
@@ -797,6 +799,7 @@ class Parser:
         if self.current_str() == ':':
             self.skip()
             return self.parse_expression(precedence[','])
+        assert False
 
     def parse_arg_type(self, allow_signature: bool) -> Type:
         if self.current_str() == ':' and allow_signature:

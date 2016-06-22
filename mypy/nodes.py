@@ -419,6 +419,7 @@ class Argument(Node):
         if self.initialization_statement:
             self.initialization_statement.set_line(self.line)
             self.initialization_statement.lvalues[0].set_line(self.line)
+        return self
 
     def serialize(self) -> JsonDict:
         data = {'.class': 'Argument',

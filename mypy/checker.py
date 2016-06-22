@@ -249,6 +249,7 @@ class TypeChecker(NodeVisitor[Type]):
                 self.push_type_map(else_map)
             if else_body:
                 self.accept(else_body)
+        return None
 
     #
     # Definitions
@@ -269,6 +270,7 @@ class TypeChecker(NodeVisitor[Type]):
             self.check_method_override(defn)
             self.check_inplace_operator_method(defn)
         self.check_overlapping_overloads(defn)
+        return None
 
     def check_overlapping_overloads(self, defn: OverloadedFuncDef) -> None:
         for i, item in enumerate(defn.items):
@@ -379,10 +381,11 @@ class TypeChecker(NodeVisitor[Type]):
                                        messages.INCOMPATIBLE_REDEFINITION,
                                        'redefinition with type',
                                        'original type')
+        return None
 
     def check_func_item(self, defn: FuncItem,
                         type_override: CallableType = None,
-                        name: str = None) -> Type:
+                        name: str = None) -> None:
         """Type check a function.
 
         If type_override is provided, use it as the function type.
@@ -841,6 +844,7 @@ class TypeChecker(NodeVisitor[Type]):
         self.check_multiple_inheritance(typ)
         self.leave_partial_types()
         self.errors.pop_type()
+        return None
 
     def check_multiple_inheritance(self, typ: TypeInfo) -> None:
         """Check for multiple inheritance related errors."""
@@ -906,9 +910,11 @@ class TypeChecker(NodeVisitor[Type]):
 
     def visit_import_from(self, node: ImportFrom) -> Type:
         self.check_import(node)
+        return None
 
     def visit_import_all(self, node: ImportAll) -> Type:
         self.check_import(node)
+        return None
 
     def check_import(self, node: ImportBase) -> Type:
         for assign in node.assignments:
@@ -922,6 +928,7 @@ class TypeChecker(NodeVisitor[Type]):
             self.check_simple_assignment(lvalue_type, assign.rvalue, node,
                                          msg=message, lvalue_name='local name',
                                          rvalue_name='imported name')
+        return None
 
     #
     # Statements
@@ -934,6 +941,7 @@ class TypeChecker(NodeVisitor[Type]):
             if self.binder.is_unreachable():
                 break
             self.accept(s)
+        return None
 
     def visit_assignment_stmt(self, s: AssignmentStmt) -> Type:
         """Type check an assignment statement.
@@ -950,6 +958,7 @@ class TypeChecker(NodeVisitor[Type]):
             rvalue = self.temp_node(self.type_map[s.rvalue], s)
             for lv in s.lvalues[:-1]:
                 self.check_assignment(lv, rvalue, s.type is None)
+        return None
 
     def check_assignment(self, lvalue: Node, rvalue: Node, infer_lvalue_type: bool = True) -> None:
         """Type check a single assignment: lvalue = rvalue."""
@@ -1371,6 +1380,7 @@ class TypeChecker(NodeVisitor[Type]):
 
     def visit_expression_stmt(self, s: ExpressionStmt) -> Type:
         self.accept(s.expr)
+        return None
 
     def visit_return_stmt(self, s: ReturnStmt) -> Type:
         """Type check a return statement."""
@@ -1418,6 +1428,7 @@ class TypeChecker(NodeVisitor[Type]):
 
                 if self.typing_mode_full():
                     self.fail(messages.RETURN_VALUE_EXPECTED, s)
+        return None
 
     def wrap_generic_type(self, typ: Instance, rtyp: Instance, check_type:
                           str, context: Context) -> Type:
@@ -1470,6 +1481,7 @@ class TypeChecker(NodeVisitor[Type]):
         """Type check a while statement."""
         self.accept_loop(IfStmt([s.expr], [s.body], None), s.else_body,
                          exit_condition=s.expr)
+        return None
 
     def visit_operator_assignment_stmt(self,
                                        s: OperatorAssignmentStmt) -> Type:
@@ -1484,6 +1496,7 @@ class TypeChecker(NodeVisitor[Type]):
         else:
             if not is_subtype(rvalue_type, lvalue_type):
                 self.msg.incompatible_operator_assignment(s.op, s)
+        return None
 
     def visit_assert_stmt(self, s: AssertStmt) -> Type:
         self.accept(s.expr)
@@ -1492,6 +1505,7 @@ class TypeChecker(NodeVisitor[Type]):
         true_map, _ = self.find_isinstance_check(s.expr)
 
         self.push_type_map(true_map)
+        return None
 
     def visit_raise_stmt(self, s: RaiseStmt) -> Type:
         """Type check a raise statement."""
@@ -1500,6 +1514,7 @@ class TypeChecker(NodeVisitor[Type]):
         if s.from_expr:
             self.type_check_raise(s.from_expr, s)
         self.binder.unreachable()
+        return None
 
     def type_check_raise(self, e: Node, s: RaiseStmt) -> None:
         typ = self.accept(e)
@@ -1524,6 +1539,7 @@ class TypeChecker(NodeVisitor[Type]):
         self.check_subtype(typ,
                            self.named_type('builtins.BaseException'), s,
                            messages.INVALID_EXCEPTION)
+        return None
 
     def visit_try_stmt(self, s: TryStmt) -> Type:
         """Type check a try statement."""
@@ -1637,6 +1653,7 @@ class TypeChecker(NodeVisitor[Type]):
         item_type = self.analyze_iterable_item_type(s.expr)
         self.analyze_index_variables(s.index, item_type, s)
         self.accept_loop(s.body, s.else_body)
+        return None
 
     def analyze_iterable_item_type(self, expr: Node) -> Type:
         """Analyse iterable expression and return iterator item type."""
@@ -1672,6 +1689,7 @@ class TypeChecker(NodeVisitor[Type]):
             method = echk.analyze_external_member_access(nextmethod, iterator,
                                                          expr)
             return echk.check_call(method, [], [], expr)[0]
+        return None
 
     def analyze_index_variables(self, index: Node, item_type: Type,
                                 context: Context) -> None:
@@ -1731,6 +1749,7 @@ class TypeChecker(NodeVisitor[Type]):
         e.var.is_ready = True
         if e.func.is_property:
             self.check_incompatible_property_override(e)
+        return None
 
     def check_incompatible_property_override(self, e: Decorator) -> None:
         if not e.var.is_settable_property and e.func.info is not None:
@@ -1756,6 +1775,7 @@ class TypeChecker(NodeVisitor[Type]):
             arg = self.temp_node(AnyType(), expr)
             echk.check_call(exit, [arg] * 3, [nodes.ARG_POS] * 3, expr)
         self.accept(s.body)
+        return None
 
     def visit_print_stmt(self, s: PrintStmt) -> Type:
         for arg in s.args:
@@ -1765,6 +1785,7 @@ class TypeChecker(NodeVisitor[Type]):
             if not isinstance(target_type, NoneTyp):
                 # TODO: Also verify the type of 'write'.
                 self.expr_checker.analyze_external_member_access('write', target_type, s.target)
+        return None
 
     #
     # Expressions
