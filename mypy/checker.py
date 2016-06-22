@@ -21,7 +21,7 @@ from mypy.nodes import (
     TypeApplication, DictExpr, SliceExpr, FuncExpr, TempNode, SymbolTableNode,
     Context, ListComprehension, ConditionalExpr, GeneratorExpr,
     Decorator, SetExpr, TypeVarExpr, PrintStmt,
-    LITERAL_TYPE, BreakStmt, ContinueStmt, ComparisonExpr, StarExpr,
+    LITERAL_TYPE, BreakStmt, PassStmt, ContinueStmt, ComparisonExpr, StarExpr,
     YieldFromExpr, NamedTupleExpr, SetComprehension,
     DictionaryComprehension, ComplexExpr, EllipsisExpr, TypeAliasExpr,
     RefExpr, YieldExpr, BackquoteExpr, ImportFrom, ImportAll, ImportBase,
@@ -121,13 +121,14 @@ class TypeChecker(NodeVisitor[Type]):
     check_untyped_defs = False
     warn_incomplete_stub = False
     warn_redundant_casts = False
+    warn_no_return = False
     is_typeshed_stub = False
 
     def __init__(self, errors: Errors, modules: Dict[str, MypyFile],
                  pyversion: Tuple[int, int] = defaults.PYTHON3_VERSION,
                  disallow_untyped_calls=False, disallow_untyped_defs=False,
                  check_untyped_defs=False, warn_incomplete_stub=False,
-                 warn_redundant_casts=False) -> None:
+                 warn_redundant_casts=False, warn_no_return=False) -> None:
         """Construct a type checker.
 
         Use errors to report type check errors.
@@ -153,6 +154,7 @@ class TypeChecker(NodeVisitor[Type]):
         self.check_untyped_defs = check_untyped_defs
         self.warn_incomplete_stub = warn_incomplete_stub
         self.warn_redundant_casts = warn_redundant_casts
+        self.warn_no_return = warn_no_return
 
     def visit_file(self, file_node: MypyFile, path: str) -> None:
         """Type check a mypy file with the given path."""
@@ -511,6 +513,20 @@ class TypeChecker(NodeVisitor[Type]):
             # Type check body in a new scope.
             with self.binder.top_frame_context():
                 self.accept(item.body)
+                unreachable = self.binder.is_unreachable()
+
+            if (not unreachable and not defn.is_generator and
+                    not isinstance(self.return_types[-1], (Void, AnyType))):
+                # Allow functions that are entirely pass/Ellipsis.
+                last_line = defn.body.body[-1]
+                if (len(defn.body.body) == 1 and
+                    ((isinstance(last_line, ExpressionStmt) and
+                      isinstance(last_line.expr, EllipsisExpr)) or
+                     isinstance(last_line, PassStmt))):
+                    pass
+                else:
+                    if self.warn_no_return:
+                        self.msg.note(messages.MISSING_RETURN_STATEMENT, defn)
 
             self.return_types.pop()
 

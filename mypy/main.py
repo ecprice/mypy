@@ -155,6 +155,8 @@ def process_options() -> Tuple[List[BuildSource], Options]:
                         " --check-untyped-defs enabled")
     parser.add_argument('--warn-redundant-casts', action='store_true',
                         help="warn about casting an expression to its inferred type")
+    parser.add_argument('--warn-no-return', action='store_true',
+                        help="warn about functions that end without returning")
     parser.add_argument('--warn-unused-ignores', action='store_true',
                         help="warn about unneeded '# type: ignore' comments")
     parser.add_argument('--fast-parser', action='store_true',
@@ -257,6 +259,8 @@ def process_options() -> Tuple[List[BuildSource], Options]:
         options.build_flags.append(build.WARN_INCOMPLETE_STUB)
     if args.warn_redundant_casts:
         options.build_flags.append(build.WARN_REDUNDANT_CASTS)
+    if args.warn_no_return:
+        options.build_flags.append(build.WARN_NO_RETURN)
 
     if args.warn_unused_ignores:
         options.build_flags.append(build.WARN_UNUSED_IGNORES)

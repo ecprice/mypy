@@ -72,6 +72,8 @@ WARN_INCOMPLETE_STUB = 'warn-incomplete-stub'
 WARN_REDUNDANT_CASTS = 'warn-redundant-casts'
 # Warn about unused '# type: ignore' comments
 WARN_UNUSED_IGNORES = 'warn-unused-ignores'
+# Warn about unused '# type: ignore' comments
+WARN_NO_RETURN = 'warn-no-return'
 
 PYTHON_EXTENSIONS = ['.pyi', '.py']
 
@@ -401,7 +403,8 @@ class BuildManager:
                                         DISALLOW_UNTYPED_DEFS in self.flags,
                                         check_untyped_defs,
                                         WARN_INCOMPLETE_STUB in self.flags,
-                                        WARN_REDUNDANT_CASTS in self.flags)
+                                        WARN_REDUNDANT_CASTS in self.flags,
+                                        WARN_NO_RETURN in self.flags)
         self.missing_modules = set()  # type: Set[str]
 
     def all_imported_modules_in_file(self,
