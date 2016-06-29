@@ -1386,6 +1386,7 @@ class TypeChecker(NodeVisitor[Type]):
         """Type check a return statement."""
         self.check_return_stmt(s)
         self.binder.unreachable()
+        return None
 
     def check_return_stmt(self, s: ReturnStmt) -> None:
         if self.is_within_function():
