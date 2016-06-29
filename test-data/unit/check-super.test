@@ -15,6 +15,7 @@ class A(B):
     a = super().f() # E: Incompatible types in assignment (expression has type "B", variable has type "A")
     a = super().g() # E: "g" undefined in superclass
     b = super().f()
+    return a
 [out]
 main: note: In member "f" of class "A":
 
@@ -91,7 +92,7 @@ class A:
 class B(A):
     def __new__(cls, x: str) -> 'A':
         super().__new__(cls, 1)
-        super().__new__(cls, x) # E
+        return super().__new__(cls, x) # E
 B('')
 B(1) # E
 [builtins fixtures/__new__.py]

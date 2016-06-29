@@ -252,6 +252,7 @@ class A(Generic[T]):
         a = object()    # Fail
         b = self.f() # type: object
         b = self.f()
+        return a
 [out]
 main: note: In member "f" of class "A":
 main:5: error: Incompatible types in assignment (expression has type "object", variable has type "T")
