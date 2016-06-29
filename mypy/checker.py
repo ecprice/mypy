@@ -1502,7 +1502,8 @@ class TypeChecker(NodeVisitor[Type]):
         self.accept(s.expr)
 
         # If this is asserting some isinstance check, bind that type in the following code
-        true_map, _ = self.find_isinstance_check(s.expr)
+        expr = s.expr.items[0] if isinstance(s.expr, TupleExpr) else s.expr
+        true_map, _ = self.find_isinstance_check(expr)
 
         self.push_type_map(true_map)
         return None
